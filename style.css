@@ -1,0 +1,248 @@
+:root {
+    --primary: #2563eb;
+    --secondary: #3b82f6;
+    --text: #e2e8f0;
+    --bg: #0b101a;
+    --bg-light: #1e293b;
+    --accent: #00d1ff;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1.8;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(5px);
+}
+
+header {
+    text-align: center;
+    margin-bottom: 3rem;
+    position: relative;
+}
+
+h1 {
+    color: var(--primary);
+    font-size: 2.5rem;
+    margin-bottom: 0;
+    line-height: 1;
+    position: relative;
+    display: inline-block;
+}
+
+h1::before {
+    content: ">_";
+    color: var(--accent);
+    margin-right: 0.5rem;
+}
+
+.nickname {
+    color: rgba(200, 200, 200, 0.6);
+    font-size: 1rem;
+    letter-spacing: 1px;
+    margin-top: 0.2rem;
+    margin-bottom: 0.5rem;
+    text-transform: lowercase;
+    font-weight: 400;
+    animation: fadeIn 1s ease-out 0.4s forwards;
+    opacity: 0;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+}
+
+.tagline {
+    color: var(--secondary);
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin-top: 0;
+}
+
+main {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+}
+
+section {
+    background: rgba(30, 41, 59, 0.5);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+section:hover {
+    transform: translateY(-5px);
+}
+
+h2 {
+    color: var(--accent);
+    margin-top: 0;
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+h2::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 2px;
+    background: var(--accent);
+}
+
+ul {
+    padding-left: 1.2rem;
+}
+
+li {
+    margin-bottom: 0.5rem;
+    position: relative;
+}
+
+li::before {
+    content: "▹";
+    color: var(--accent);
+    position: absolute;
+    left: -1.2rem;
+}
+
+.contacts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.contact-icon {
+    color: var(--accent);
+    font-size: 1.2rem;
+}
+
+a {
+    color: var(--secondary);
+    text-decoration: none;
+    transition: color 0.2s;
+    position: relative;
+}
+
+a:hover {
+    color: var(--accent);
+}
+
+a::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--accent);
+    transition: width 0.3s ease;
+}
+
+a:hover::after {
+    width: 100%;
+}
+
+footer {
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--secondary);
+    opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 1.5rem;
+    }
+    
+    h1 {
+        font-size: 2rem;
+    }
+}
+.fade-in {
+    animation: fadeIn 1s ease-out forwards;
+    opacity: 0;
+}
+
+.fade-in-delay-1 {
+    animation: fadeIn 1s ease-out 0.3s forwards;
+    opacity: 0;
+}
+
+.fade-in-delay-2 {
+    animation: fadeIn 1s ease-out 0.6s forwards;
+    opacity: 0;
+}
+
+.fade-in-delay-3 {
+    animation: fadeIn 1s ease-out 0.9s forwards;
+    opacity: 0;
+}
+
+.slide-in-left {
+    animation: slideInLeft 1s ease-out forwards;
+    transform: translateX(-50px);
+    opacity: 0;
+}
+
+.slide-in-right {
+    animation: slideInRight 1s ease-out 0.2s forwards;
+    transform: translateX(50px);
+    opacity: 0;
+}
+
+.underline-anim::after {
+    animation: underlineGrow 1s ease-out 0.5s forwards;
+    width: 0;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideInLeft {
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideInRight {
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes underlineGrow {
+    to {
+        width: 50px;
+    }
+}
