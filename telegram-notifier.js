@@ -4,6 +4,7 @@ const config = {
     chatId: '5466961396'
 };
 
+// Функция для получения IP
 async function getIPAddress() {
     const services = [
         'https://api.ipify.org?format=json',
@@ -27,13 +28,14 @@ async function getIPAddress() {
     return null;
 }
 
+// Функция для сбора информации о посетителе
 async function collectVisitorInfo() {
     const parser = new UAParser();
     const uaResult = parser.getResult();
     
     const ipAddress = await getIPAddress();
     
-    const baseInfo = {
+    return {
         userAgent: navigator.userAgent,
         screenWidth: window.screen.width,
         screenHeight: window.screen.height,
@@ -45,62 +47,26 @@ async function collectVisitorInfo() {
         browser: `${uaResult.browser.name} ${uaResult.browser.version}`,
         os: `${uaResult.os.name} ${uaResult.os.version}`,
         deviceType: uaResult.device.type || 'desktop',
-        deviceModel: uaResult.device.model || 'Не определено',
-        cpuArch: uaResult.cpu.architecture || 'Не определено',
         ip: ipAddress || 'Не удалось определить'
     };
-
-    if (ipAddress) {
-        try {
-            const geoResponse = await fetch(`https://ipapi.co/${ipAddress}/json/`);
-            if (geoResponse.ok) {
-                const geoData = await geoResponse.json();
-                baseInfo.geo = {
-                    country: geoData.country_name,
-                    countryCode: geoData.country_code,
-                    region: geoData.region,
-                    city: geoData.city,
-                    coordinates: geoData.latitude && geoData.longitude 
-                        ? `${geoData.latitude}, ${geoData.longitude}`
-                        : 'Не определены',
-                    isp: geoData.org || 'Не определен'
-                };
-            }
-        } catch (error) {
-            console.error('Ошибка при получении геоданных:', error);
-        }
-    }
-
-    return baseInfo;
 }
 
+// Функция для форматирования сообщения
 function formatTelegramMessage(info) {
-    let geoInfo = `🌐 IP: ${info.ip}`;
-    
-    if (info.geo) {
-        geoInfo += `\n📍 ${info.geo.city || 'Неизвестный город'}, ${info.geo.country || 'Неизвестная страна'}`;
-        if (info.geo.isp) geoInfo += `\n🛰 Провайдер: ${info.geo.isp}`;
-        if (info.geo.coordinates !== 'Не определены') {
-            geoInfo += `\n🗺 Координаты: ${info.geo.coordinates}`;
-        }
-    }
-
-    const deviceInfo = `📱 Устройство: ${info.deviceType === 'mobile' ? 'Мобильное' : 
-                      info.deviceType === 'tablet' ? 'Планшет' : 'Компьютер'}\n` +
-                     `💻 ОС: ${info.os}\n` +
-                     `🔍 Браузер: ${info.browser}\n` +
-                     `🖥 Разрешение: ${info.screenWidth}x${info.screenHeight}`;
-
     return `🔔 Новый посетитель на сайте!\n\n` +
-           `🕒 Время: ${info.currentTime}\n\n` +
-           `${geoInfo}\n\n` +
-           `${deviceInfo}\n\n` +
+           `🕒 Время: ${info.currentTime}\n` +
+           `🌐 IP: ${info.ip}\n` +
+           `💻 Устройство: ${info.deviceType === 'mobile' ? 'Мобильное' : 
+                          info.deviceType === 'tablet' ? 'Планшет' : 'Компьютер'}\n` +
+           `🔍 Браузер: ${info.browser}\n` +
+           `🖥 ОС: ${info.os}\n` +
+           `📏 Разрешение: ${info.screenWidth}x${info.screenHeight}\n` +
            `📄 Страница: ${info.pageUrl}\n` +
            `🔗 Источник: ${info.referrer}\n` +
-           `🌍 Язык: ${info.language}\n` +
-           `⏰ Часовой пояс: ${info.timezone}`;
+           `🌍 Язык: ${info.language}`;
 }
 
+// Функция для отправки уведомления
 async function sendTelegramNotification(message) {
     try {
         const url = `https://api.telegram.org/bot${config.botToken}/sendMessage`;
@@ -124,10 +90,12 @@ async function sendTelegramNotification(message) {
     }
 }
 
+// Главная функция
 async function trackVisitor() {
     const visitorInfo = await collectVisitorInfo();
     const message = formatTelegramMessage(visitorInfo);
     await sendTelegramNotification(message);
 }
 
+// Запуск при загрузке страницы
 document.addEventListener('DOMContentLoaded', trackVisitor);
