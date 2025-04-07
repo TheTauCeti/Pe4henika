@@ -4,10 +4,34 @@ const config = {
     chatId: '5466961396'
 };
 
-// Функция для сбора информации о посетителе
+async function getIPAddress() {
+    const services = [
+        'https://api.ipify.org?format=json',
+        'https://ipapi.co/json/',
+        'https://ipinfo.io/json',
+        'https://api.myip.com'
+    ];
+
+    for (const service of services) {
+        try {
+            const response = await fetch(service);
+            if (!response.ok) continue;
+            
+            const data = await response.json();
+            return data.ip || data.query || null;
+        } catch (error) {
+            console.error(`Ошибка при запросе к ${service}:`, error);
+            continue;
+        }
+    }
+    return null;
+}
+
 async function collectVisitorInfo() {
     const parser = new UAParser();
     const uaResult = parser.getResult();
+    
+    const ipAddress = await getIPAddress();
     
     const baseInfo = {
         userAgent: navigator.userAgent,
@@ -22,58 +46,52 @@ async function collectVisitorInfo() {
         os: `${uaResult.os.name} ${uaResult.os.version}`,
         deviceType: uaResult.device.type || 'desktop',
         deviceModel: uaResult.device.model || 'Не определено',
-        cpuArch: uaResult.cpu.architecture || 'Не определено'
+        cpuArch: uaResult.cpu.architecture || 'Не определено',
+        ip: ipAddress || 'Не удалось определить'
     };
 
-    try {
-        const geoResponse = await fetch('http://ip-api.com/json/?fields=status,message,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query');
-        const geoData = await geoResponse.json();
-        
-        if (geoData.status === 'success') {
-            baseInfo.geo = {
-                ip: geoData.query,
-                country: geoData.country,
-                countryCode: geoData.countryCode,
-                region: geoData.regionName,
-                city: geoData.city,
-                zip: geoData.zip,
-                coordinates: `${geoData.lat}, ${geoData.lon}`,
-                isp: geoData.isp,
-                org: geoData.org,
-                as: geoData.as
-            };
+    if (ipAddress) {
+        try {
+            const geoResponse = await fetch(`https://ipapi.co/${ipAddress}/json/`);
+            if (geoResponse.ok) {
+                const geoData = await geoResponse.json();
+                baseInfo.geo = {
+                    country: geoData.country_name,
+                    countryCode: geoData.country_code,
+                    region: geoData.region,
+                    city: geoData.city,
+                    coordinates: geoData.latitude && geoData.longitude 
+                        ? `${geoData.latitude}, ${geoData.longitude}`
+                        : 'Не определены',
+                    isp: geoData.org || 'Не определен'
+                };
+            }
+        } catch (error) {
+            console.error('Ошибка при получении геоданных:', error);
         }
-    } catch (error) {
-        baseInfo.geo = {
-            ip: 'Не удалось определить',
-            error: 'Не удалось получить геоданные'
-        };
     }
 
     return baseInfo;
 }
 
 function formatTelegramMessage(info) {
-    let geoInfo = 'Не удалось определить';
-    if (info.geo && info.geo.ip !== 'Не удалось определить') {
-        geoInfo = `📍 ${info.geo.city}, ${info.geo.country} (${info.geo.countryCode})\n` +
-                 `🌐 IP: ${info.geo.ip}\n` +
-                 `🛰 Провайдер: ${info.geo.isp}\n` +
-                 `🏢 Организация: ${info.geo.org || 'Не указана'}\n` +
-                 `🗺 Координаты: ${info.geo.coordinates || 'Не определены'}`;
-    } else {
-        geoInfo = `🌐 IP: ${info.geo?.ip || 'Не удалось определить'}`;
+    let geoInfo = `🌐 IP: ${info.ip}`;
+    
+    if (info.geo) {
+        geoInfo += `\n📍 ${info.geo.city || 'Неизвестный город'}, ${info.geo.country || 'Неизвестная страна'}`;
+        if (info.geo.isp) geoInfo += `\n🛰 Провайдер: ${info.geo.isp}`;
+        if (info.geo.coordinates !== 'Не определены') {
+            geoInfo += `\n🗺 Координаты: ${info.geo.coordinates}`;
+        }
     }
 
     const deviceInfo = `📱 Устройство: ${info.deviceType === 'mobile' ? 'Мобильное' : 
                       info.deviceType === 'tablet' ? 'Планшет' : 'Компьютер'}\n` +
-                     (info.deviceModel !== 'Не определено' ? `📱 Модель: ${info.deviceModel}\n` : '') +
                      `💻 ОС: ${info.os}\n` +
-                     `🖥 Архитектура: ${info.cpuArch}\n` +
                      `🔍 Браузер: ${info.browser}\n` +
                      `🖥 Разрешение: ${info.screenWidth}x${info.screenHeight}`;
 
-    return `🔔 Новый посетитель на сайте Pe4henika!\n\n` +
+    return `🔔 Новый посетитель на сайте!\n\n` +
            `🕒 Время: ${info.currentTime}\n\n` +
            `${geoInfo}\n\n` +
            `${deviceInfo}\n\n` +
@@ -100,9 +118,9 @@ async function sendTelegramNotification(message) {
         });
         
         const data = await response.json();
-        console.log('Уведомление отправлено в Telegram:', data);
+        console.log('Уведомление отправлено:', data);
     } catch (error) {
-        console.error('Ошибка при отправке уведомления:', error);
+        console.error('Ошибка отправки:', error);
     }
 }
 
